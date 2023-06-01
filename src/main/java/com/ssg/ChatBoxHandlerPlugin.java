@@ -6,7 +6,9 @@ import javax.inject.Singleton;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.KeyCode;
 import net.runelite.api.events.GameTick;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.config.ConfigManager;
@@ -16,10 +18,6 @@ import net.runelite.client.plugins.PluginDescriptor;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import static java.awt.event.InputEvent.BUTTON1_DOWN_MASK;
 
 @Slf4j
 @Singleton
@@ -78,80 +76,87 @@ public class ChatBoxHandlerPlugin extends Plugin {
 
 		if (config.enablePlugin()) {
 			if (levelUpWidget != null || levelUpLevelWidget != null || levelUpSkillWidget != null || levelUpPopup != null) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (craftAllWidget != null && config.autoMake()) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (smeltAllWidget != null && config.autoJewelry()) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (anvilAllWidget != null && config.autoAnvil()) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (npcContinue != null && npcContinue.getText().contains(CONTINUE_OPTION)) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (playerContinue != null && playerContinue.getText().contains(CONTINUE_OPTION)) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (gotrPortalContinue != null && gotrPortalContinue.getText().contains(CONTINUE_OPTION)) {
-				pressSpace();
+				pressKey(KeyEvent.VK_SPACE);
 			}
 
 			if (dialogueChoice != null) {
 				for (Widget child : dialogueChoice.getChildren()) {
 					String text = child.getText();
-					int option = extractDialogueOption(text);
-					if (option != -1) {
-						chooseDialogueOption(option);
+					if (text.contains("[1]") || text.contains("[2]") || text.contains("[3]") || text.contains("[4]") || text.contains("[5]")) {
+						log.info("We see quest dialogue choice, it is: " +text);
+						//chooseDialogueOption(extractOptionFromText(text));
+						pressKey(extractOptionFromText(text));
 					}
 				}
 			}
 		}
 	}
 
-	private void chooseDialogueOption(int option) {
-		pressNumberKey(option);
+	@Subscribe
+	private void onMenuOptionClicked(MenuOptionClicked event) {
+		log.info("" + event.getMenuAction());
 	}
 
-	// Presses the specified number key on the keyboard
-	private void pressNumberKey(int number) {
-		int keyCode = KeyEvent.VK_0 + number; // Calculate the corresponding key code for the number
+	private void chooseDialogueOption(int option) {
+		int keyCode = KeyEvent.VK_0 + option;
 		pressKey(keyCode);
 	}
-
-	// Presses a key with the given key code
-	private void pressKey(int keyCode) {
-		long eventTime = System.currentTimeMillis();
-
-		KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, eventTime, 0, keyCode);
-		this.client.getCanvas().dispatchEvent(keyPress);
-
-		KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, eventTime, 0, keyCode);
-		this.client.getCanvas().dispatchEvent(keyRelease);
-	}
-
-
-	private void pressSpace() {
-		KeyEvent keyPress = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), BUTTON1_DOWN_MASK, KeyEvent.VK_SPACE);
-		this.client.getCanvas().dispatchEvent(keyPress);
-		KeyEvent keyRelease = new KeyEvent(this.client.getCanvas(), KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_SPACE);
-		this.client.getCanvas().dispatchEvent(keyRelease);
-	}
-
-	private int extractDialogueOption(String text) {
-		Pattern pattern = Pattern.compile("\\[(\\d+)\\]");
-		Matcher matcher = pattern.matcher(text);
-		if (matcher.find()) {
-			return Integer.parseInt(matcher.group(1));
+	private int extractOptionFromText(String text) {
+		String optionText = text.replaceAll("[^\\d]", "");
+		if (!optionText.isEmpty()) {
+			return Integer.parseInt(optionText);
 		}
-		return -1;
+
+		return 0;
+	}
+
+	private void pressKey(int keyCode) {
+		log.info("Pressing key with keycode: " + keyCode);
+		long eventTime = System.currentTimeMillis();
+		int modifiers = 0;
+
+		KeyEvent keyPress = new KeyEvent(
+				client.getCanvas(),
+				KeyEvent.KEY_PRESSED,
+				eventTime,
+				modifiers,
+				KeyEvent.VK_UNDEFINED,
+				(char) keyCode
+		);
+		client.getCanvas().dispatchEvent(keyPress);
+
+		KeyEvent keyRelease = new KeyEvent(
+				client.getCanvas(),
+				KeyEvent.KEY_RELEASED,
+				eventTime,
+				modifiers,
+				KeyEvent.VK_UNDEFINED,
+				(char) keyCode
+		);
+		client.getCanvas().dispatchEvent(keyRelease);
 	}
 }
