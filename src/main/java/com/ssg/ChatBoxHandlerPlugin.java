@@ -108,8 +108,7 @@ public class ChatBoxHandlerPlugin extends Plugin {
 					String text = child.getText();
 					if (text.contains("[1]") || text.contains("[2]") || text.contains("[3]") || text.contains("[4]") || text.contains("[5]")) {
 						log.info("We see quest dialogue choice, it is: " +text);
-						//chooseDialogueOption(extractOptionFromText(text));
-						pressKey(extractOptionFromText(text));
+						chooseDialogueOption(extractOptionFromText(text));
 					}
 				}
 			}
@@ -144,8 +143,7 @@ public class ChatBoxHandlerPlugin extends Plugin {
 				KeyEvent.KEY_PRESSED,
 				eventTime,
 				modifiers,
-				KeyEvent.VK_UNDEFINED,
-				(char) keyCode
+				keyCode
 		);
 		client.getCanvas().dispatchEvent(keyPress);
 
@@ -154,8 +152,7 @@ public class ChatBoxHandlerPlugin extends Plugin {
 				KeyEvent.KEY_RELEASED,
 				eventTime,
 				modifiers,
-				KeyEvent.VK_UNDEFINED,
-				(char) keyCode
+				keyCode
 		);
 		client.getCanvas().dispatchEvent(keyRelease);
 	}
